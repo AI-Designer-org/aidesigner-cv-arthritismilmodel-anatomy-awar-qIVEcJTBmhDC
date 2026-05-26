@@ -1,0 +1,76 @@
+{
+  "verdict": "needs_revision",
+  "iteration": 1,
+  "summary": "The draft is well scoped as a reference architecture plus validation harness, but several statements overclaim what the available artifacts verify, and one concrete mismatch with the implemented configuration should be corrected. The main revisions are to weaken unsupported performance-like interpretations of synthetic benchmarks, align implementation details with the code, and disclose research-eval gaps more consistently where the text currently implies broader readiness.",
+  "issues": [
+    {
+      "id": "i_01",
+      "severity": "major",
+      "category": "claims",
+      "location": "Results, Section 5.3 'Synthetic Micro-Benchmarks', sentence 1",
+      "problem": "The paper states that the linear probe sanity check 'confirms that frozen features carry discriminative signal' and reports 41% vs. 25% accuracy. The research-eval artifacts explicitly say the linear probe is only a mechanical sanity check on synthetic/random data and has no scientific meaning for the clinical task; as written, this sentence over-interprets a synthetic benchmark as evidence about feature quality.",
+      "suggested_fix": "Rewrite this sentence to describe the result strictly as a harness sanity check on synthetic/random inputs, e.g. that the feature-extraction and probe-training pipeline is operational, without implying clinically meaningful discriminative signal or feature quality.",
+      "persisted_from_previous": false
+    },
+    {
+      "id": "i_02",
+      "severity": "major",
+      "category": "factual",
+      "location": "Method, Section 3.1 Overview and Section 3.2 'Foundation model backbone'",
+      "problem": "The prose describes the backbone as 'frozen DINOv2 ViT-L/14' as if this is the implemented/validated setting, but the validator and test artifacts show that all reported verification results were run with the synthetic 'tiny_debug' backbone, and the code/config support multiple backbones. Presenting DINOv2 as the concrete validated backbone blurs the distinction between the proposed default design and what was actually exercised by the harness.",
+      "suggested_fix": "Clarify at first mention that DINOv2 ViT-L/14 is the reference default architecture choice, whereas the reported 39-test validation results were executed with the tiny_debug backbone on synthetic data for speed and mechanical verification. Keep DINOv2 discussion as design intent unless a DINOv2-backed run is actually reported.",
+      "persisted_from_previous": false
+    },
+    {
+      "id": "i_03",
+      "severity": "major",
+      "category": "research_eval",
+      "location": "NeurIPS Checklist, item 5 'Code'",
+      "problem": "The checklist answer says the implementation includes 'an ablation runner (7 ablations)', but experiment_coverage.md states only 6/7 architect-suggested ablations are fully implemented and the detection-to-tile-sampling ablation is only partial because no actual grid-based tile sampler exists. This contradicts the research-eval ground truth.",
+      "suggested_fix": "Revise the checklist answer to distinguish fully implemented versus partial ablations, explicitly noting that tile-sampling is only partially implemented as a config path and not yet a true runnable grid-sampling baseline.",
+      "persisted_from_previous": false
+    },
+    {
+      "id": "i_04",
+      "severity": "major",
+      "category": "factual",
+      "location": "Method, Section 3.2 'Foundation model backbone', last sentence",
+      "problem": "The paper proposes LoRA adapters for the vision backbone but cites the original LoRA paper for large language models. This is not fabricated, but it is an imprecise citation for the vision-backbone adaptation claim as stated in context.",
+      "suggested_fix": "Either rephrase to 'LoRA-style low-rank adapters' and keep the general citation, or add a citation for applying/adapting LoRA-like methods to vision transformers if you want to present this as a vision-specific design choice.",
+      "persisted_from_previous": false
+    },
+    {
+      "id": "i_05",
+      "severity": "minor",
+      "category": "structure",
+      "location": "NeurIPS Checklist, item 3 'Theory'",
+      "problem": "The checklist claims the paper provides '10 documented inductive biases' and 'a traceability table', but those artifacts live upstream in architect documents and are not actually presented in the paper body. The checklist should describe what the paper itself contains, not what exists elsewhere in the project folder.",
+      "suggested_fix": "Either add a compact inductive-bias/traceability table to the paper or soften the checklist answer to say the paper provides design rationale and formal loss definitions, with fuller traceability available in supplementary/project documentation.",
+      "persisted_from_previous": false
+    },
+    {
+      "id": "i_06",
+      "severity": "minor",
+      "category": "claims",
+      "location": "Results, Section 5.2 'Parameter Counts', Table 2 and following paragraph",
+      "problem": "The parameter-count discussion is presented as measured results for the baseline and ablations, but the surrounding artifacts emphasize that some backbone options such as OrthoFoundation/SKELEX remain unavailable and that several evaluation components are still unexecuted. The section would be clearer if it distinguished architecture-derived counts from experimentally benchmarked comparisons.",
+      "suggested_fix": "State explicitly that these are architecture/configuration-derived parameter counts for implemented backbones and not comparative performance results; keep unavailable backbones clearly marked as future work.",
+      "persisted_from_previous": false
+    }
+  ],
+  "scope_check": {
+    "overstates_empirical_results": false,
+    "claims_sota_without_numbers": false,
+    "relabels_synthetic_as_real": false,
+    "demands_trained_model_results": false,
+    "ignores_research_eval_gaps": true,
+    "states_unverified_claim_as_fact": true,
+    "claims_baseline_superiority_without_coverage": false
+  },
+  "stats": {
+    "blockers": 0,
+    "majors": 4,
+    "minors": 2,
+    "nits": 0
+  }
+}

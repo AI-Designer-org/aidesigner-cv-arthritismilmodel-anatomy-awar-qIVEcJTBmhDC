@@ -1,0 +1,49 @@
+{
+  "verdict": "needs_revision",
+  "iteration": 2,
+  "summary": "The draft is substantially improved and now consistently frames itself as a reference architecture plus validation harness rather than a trained clinical system. Remaining issues are limited but still include one blocker-level citation problem and two major factual/research-eval mismatches that should be corrected before submission.",
+  "issues": [
+    {
+      "id": "i_03",
+      "severity": "major",
+      "category": "research_eval",
+      "location": "NeurIPS Checklist, item 5 'Code'",
+      "problem": "The checklist says the codebase includes 'an ablation runner (7 ablation configurations: 6 fully runnable as standalone modules, 1 with partial implementation as a config-only path)'. The research-eval artifacts support 6/7 architect-suggested ablations fully implemented and 1 partial, but not that the six are 'standalone modules'. This wording still overstates what is implemented by implying fuller baseline/module separation than the artifacts document, especially given that image-level ViT and single-disease specialists remain unimplemented or only partial in experiment_coverage.md and scorecard.json.",
+      "suggested_fix": "Tighten the checklist answer to match the artifacts exactly: say that the repository includes an ablation runner with 7 ablation configurations, of which 6 are runnable configs and 1 is partial (tile sampling), without describing them as standalone modules or implying missing baselines are fully built.",
+      "persisted_from_previous": true
+    },
+    {
+      "id": "i_04",
+      "severity": "blocker",
+      "category": "citations",
+      "location": "Related Work, Section 2.3 'Foundation Models for Musculoskeletal Radiography' and References entries orthofoundation2026, skelex2026, uddin2025, carion2025",
+      "problem": "Several references appear to be unresolved preprints or placeholders presented as ordinary citations with omitted author lists, and the paper states concrete claims from them as factual background. The available project artifacts do not ground these citations beyond internal documents, and some entries look like future-dated or difficult-to-verify sources. In a submission draft, unverifiable or placeholder citations are a desk-reject risk.",
+      "suggested_fix": "For each of these entries, either replace it with a fully verifiable bibliographic citation you can substantiate from the source artifact, or explicitly remove/soften the dependent claims. Do not cite placeholder/future-dated works as established fact unless the exact source is real and can be verified.",
+      "persisted_from_previous": false
+    },
+    {
+      "id": "i_07",
+      "severity": "major",
+      "category": "factual",
+      "location": "Appendix, 'Test Environment' paragraph and 'Profiling Estimates' subsection",
+      "problem": "The appendix says all 39 tests were executed on a single NVIDIA RTX 4090, while the main text says the full suite runs in under 2 minutes on CPU with tiny_debug. These statements are not necessarily incompatible, but as written they blur the actual executed environment versus optional supported environments. Similarly, the profiling numbers for DINOv2 are presented as profiler estimates, while BENCHMARKS.md indicates these are architect-derived estimates rather than measured end-to-end timings for the released code path.",
+      "suggested_fix": "Disambiguate executed versus estimated environments: state explicitly whether the reported 39-pass test run was performed on CPU, GPU, or both, and label the DINOv2 timing/memory figures consistently as estimates unless backed by an actual profiling run included in the artifacts.",
+      "persisted_from_previous": false
+    }
+  ],
+  "scope_check": {
+    "overstates_empirical_results": false,
+    "claims_sota_without_numbers": false,
+    "relabels_synthetic_as_real": false,
+    "demands_trained_model_results": false,
+    "ignores_research_eval_gaps": false,
+    "states_unverified_claim_as_fact": true,
+    "claims_baseline_superiority_without_coverage": false
+  },
+  "stats": {
+    "blockers": 1,
+    "majors": 2,
+    "minors": 0,
+    "nits": 0
+  }
+}
