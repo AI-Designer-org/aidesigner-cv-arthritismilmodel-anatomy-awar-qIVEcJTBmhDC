@@ -1,0 +1,219 @@
+{
+  "task_level": "level_1",
+  "domain": "CV",
+  "secondary_domain": "SciML",
+  "upstream_contract_present": true,
+  "contract_traceability": [
+    "research/02_lifecycle_contract.yaml — novelty claims, baseline requirements, evaluation requirements, blocking unknowns",
+    "architect/04_design_justification.md — traceability table mapping 15 contract items to architecture decisions",
+    "coder/model.py — ArthritisMILModel implements all 7 pipeline stages",
+    "coder/config.py — ModelConfig with all hyperparameters including train/eval toggles",
+    "validator/test_model.py — comprehensive test suite for all layers"
+  ],
+  "baseline_status": {
+    "image_level_vit": "NOT_IMPLEMENTED — image-level ViT baseline module not built; ablation config exists",
+    "per_joint_cnn_yolo_resnet": "PARTIAL — detection module exists; per-joint ResNet classifier not separated from MIL aggregator",
+    "single_disease_specialists": "NOT_IMPLEMENTED — one-vs-all ablation config exists (ova_ra, ova_psa, ova_oa) but not trained/evaluated",
+    "frozen_vs_full_ft_ablation": "IMPLEMENTED — backbone_frozen toggle in ablations; full_ft ablation config ready",
+    "mil_vs_pooling_ablation": "IMPLEMENTED — mil_gated True → patient_pooling='mean' ablation",
+    "focal_vs_ce_ablation": "IMPLEMENTED — loss_type='focal' → 'ce' ablation",
+    "multi_vs_single_view_ablation": "IMPLEMENTED — input_views single-view → multi-view ablation",
+    "detection_vs_tile_ablation": "PARTIAL — detection_model='none' with tile config exists; tile-sampling module not implemented",
+    "anatomy_prior_on_off_ablation": "IMPLEMENTED — use_anatomy_prior_loss toggle"
+  },
+  "claim_status_summary": {
+    "grounded": [
+      "RA scoring SOTA demonstrates feasibility of automated X-ray assessment for arthritis",
+      "No existing system jointly discriminates RA/PsA/OA at per-joint granularity",
+      "MIL frameworks for RA-only scoring exist and are validated (Bo et al. 2025)",
+      "Foundation models for MSK X-rays exist but are unvalidated for inflammatory arthritis",
+      "Explanation loss approaches (Uddin et al. 2025) are applicable but not yet applied to arthritis"
+    ],
+    "hypothesis": [
+      "MIL for three-way arthritis discrimination outperforms image-level models and single-disease specialists",
+      "Foundation model backbones provide meaningful label efficiency gains for this task",
+      "Per-joint attention weights correlate with disease-specific anatomical priors",
+      "Multi-view fusion improves over single-view models for arthritis classification"
+    ],
+    "TODO_unverified": [
+      "Minimum dataset size required for stable three-way training",
+      "Whether joint-level annotations are bounding-box or label-level",
+      "Whether disease-specific anatomical priors are available as structured data",
+      "Whether OrthoFoundation/SKELEX weights are publicly accessible",
+      "Inter-annotator agreement on per-joint disease labeling",
+      "Whether 6 months is sufficient for both model development AND clinical validation/interpretability analysis"
+    ]
+  },
+  "scores": {
+    "novelty": {
+      "score": 3,
+      "evidence": [
+        "Three-way RA-vs-PsA-vs-OA per-joint discrimination is a verified gap (literature review in research/01_landscape_synthesis.md)",
+        "Anatomy-guided explanation loss is novel for arthritis XAI (extends Uddin et al. 2025)",
+        "Detection-based MIL with foundation model backbone is a novel combination for rheumatology X-ray"
+      ],
+      "concerns": [
+        "Novelty depends on real dataset performance — synthetic benchmarks cannot validate clinical novelty",
+        "Architecture novelty is incremental (combines known components); the novelty is in the problem formulation and combination",
+        "Foundation model adaptation (Gap D) is a standard transfer learning baseline, not a novel method"
+      ]
+    },
+    "experimental_comprehensiveness": {
+      "score": 3,
+      "evidence": [
+        "All 7 architect-suggested ablations are defined and runnable (run_ablations.py)",
+        "pytest suite covers 30+ tests across shapes, gradients, numerics, CV properties, and loss correctness",
+        "Profiling script for memory/FLOPs estimation (profile_model.py)",
+        "Multi-view fusion tested in both concatenative and cross-attention modes"
+      ],
+      "concerns": [
+        "Baseline models (image-level ViT, single-disease specialists) are specified but not implemented as runnable modules",
+        "Evaluation requires real X-ray data — synthetic data provides only mechanical correctness checks",
+        "Calibration analysis (ECE) not yet implemented",
+        "Deletion/Insertion faithfulness metrics not yet implemented",
+        "No real-data benchmark that can distinguish the proposed architecture from trivial baselines"
+      ]
+    },
+    "theoretical_foundation": {
+      "score": 4,
+      "evidence": [
+        "10 inductive biases documented with one-sentence justifications",
+        "15 contract-to-architecture traceability mappings in design justification",
+        "5 implementation risk flags with mitigation strategies and falsification conditions",
+        "Training dynamics documented (order of convergence, expected loss curves)",
+        "Compute budget estimated per component (detection, backbone, MIL, heads)"
+      ],
+      "concerns": [
+        "Some inductive biases are asserted rather than empirically tested (e.g., 'per-image normalization preserves anatomical contrast')",
+        "The permutation invariance of MIL is noted as a feature but also loses spatial structure information — this trade-off is under-discussed"
+      ]
+    },
+    "result_analysis": {
+      "score": 1,
+      "evidence": [
+        "Smoke test provides shape and gradient flow verification",
+        "Ablation runner produces metrics on synthetic data"
+      ],
+      "concerns": [
+        "No results on real clinical data — cannot assess if the architecture actually works for arthritis",
+        "No error analysis (confusion matrices, failure cases, per-disease breakdown)",
+        "No comparison to literature SOTA numbers (requires actual training)",
+        "Synthetic data results have no scientific meaning for the clinical task"
+      ]
+    },
+    "implementation_reproducibility": {
+      "score": 4,
+      "evidence": [
+        "All hyperparameters in single ModelConfig dataclass with __post_init__ validation",
+        "Seed fixed at 42",
+        "All modules have clear shape contracts in docstrings",
+        "Smoke test runs end-to-end and validates all output shapes",
+        "Gradient checkpointing implemented for memory-constrained training"
+      ],
+      "concerns": [
+        "Deterministic training not enforced (torch.use_deterministic_algorithms)",
+        "Data preprocessing pipeline not included (requires real data)",
+        "YOLOv7 dependency not pinned to specific version/commit"
+      ]
+    },
+    "writing_readiness": {
+      "score": 4,
+      "evidence": [
+        "Architecture diagram in ASCII (03_architecture_diagram.md)",
+        "Comprehensive design justification with traceability (04_design_justification.md)",
+        "Research landscape synthesis with gap analysis (01_landscape_synthesis.md)",
+        "Implementation roadmap with monthly milestones (03_implementation_roadmap.md)",
+        "Inductive bias table accessible to non-experts"
+      ],
+      "concerns": [
+        "Figures are ASCII art — thesis-ready figures would need professional rendering",
+        "Some technical depth is lost in the explanation of why DINOv2 transfers to X-ray (asserted rather than empirically shown)",
+        "No abstract or executive summary that states the full contribution in non-technical terms"
+      ]
+    }
+  },
+  "blocking_gaps": [
+    {
+      "code": "baseline_not_beaten",
+      "description": "No baseline comparison results exist — architecture has not been shown to beat image-level ViT or per-joint CNN baselines",
+      "priority": "critical"
+    },
+    {
+      "code": "coverage_gap",
+      "description": "Calibration (ECE), explanation faithfulness (Deletion/Insertion), and stratified evaluation not implemented",
+      "priority": "high"
+    },
+    {
+      "code": "data_unavailable",
+      "description": "Validation on real clinical X-ray data is required to assess clinical utility; synthetic-only validation insufficient",
+      "priority": "critical"
+    },
+    {
+      "code": "baseline_not_implemented",
+      "description": "Image-level ViT baseline and single-disease specialist models not built as runnable modules",
+      "priority": "high"
+    },
+    {
+      "code": "claim_not_grounded",
+      "description": "'Foundation model provides label efficiency gains' — no experiment run to verify this claim",
+      "priority": "high"
+    },
+    {
+      "code": "novelty_unverified",
+      "description": "Three-way discrimination claim depends on real data performance; synthetic benchmarks cannot falsify or confirm",
+      "priority": "high"
+    },
+    {
+      "code": "ablation_missing",
+      "description": "Tile-sampling MIL (ablation 7) is only partially implemented — no actual grid-based tile sampler",
+      "priority": "medium"
+    },
+    {
+      "code": "benchmark_not_executable",
+      "description": "Full evaluation suite requires real X-ray dataset not included in repository",
+      "priority": "critical"
+    }
+  ],
+  "recommended_next_experiments": [
+    {
+      "experiment": "Real data baseline comparison",
+      "description": "Train image-level ViT, per-joint CNN, and proposed MIL model on actual X-ray data. Compare per-joint macro-F1, patient-level AUROC.",
+      "priority": "P0 — must complete for thesis results chapter"
+    },
+    {
+      "experiment": "Anatomy prior Dice validation",
+      "description": "Compute explanation Dice between attention weights and RA/PsA/OA joint priors on real data. Compare with and without anatomy prior loss.",
+      "priority": "P0 — must complete for XAI results"
+    },
+    {
+      "experiment": "Frozen vs. fine-tuned backbone comparison",
+      "description": "Compare frozen DINOv2, LoRA fine-tuned, and full fine-tuning on held-out test set. Report per-disease F1.",
+      "priority": "P1 — validates foundation model adaptation claim"
+    },
+    {
+      "experiment": "Calibration analysis",
+      "description": "Compute ECE per disease class. Apply temperature scaling if ECE > 0.10. Report calibration curves.",
+      "priority": "P1 — required by evaluation plan"
+    },
+    {
+      "experiment": "Explanation faithfulness (Deletion/Insertion)",
+      "description": "Compute Deletion and Insertion AUC metrics on held-out test set. Compare attention-based and Grad-CAM explanations.",
+      "priority": "P1 — required by evaluation plan"
+    },
+    {
+      "experiment": "Robustness stratification",
+      "description": "Stratify performance by disease severity (mild/moderate/severe), joint site (MCP/PIP/DIP/wrist), and image view (PA/oblique).",
+      "priority": "P1 — required by evaluation plan"
+    },
+    {
+      "experiment": "One-vs-all comparison",
+      "description": "Compare three-way (RA/PsA/OA/normal) vs. one-vs-all binary classifiers. Measure multi-class penalty.",
+      "priority": "P2 — validates novelty claim strength"
+    },
+    {
+      "experiment": "Detection sensitivity analysis",
+      "description": "Evaluate how YOLOv7 detection thresholds affect downstream classification accuracy. Test confidence thresholds 0.3–0.9.",
+      "priority": "P2 — practical deployment sensitivity"
+    }
+  ]
+}

@@ -1,0 +1,144 @@
+# Research Lifecycle Contract — AI-Based Arthritis Imaging Analysis
+
+```yaml
+task_level: level_1
+domain: [CV, SciML]
+research_question: >
+  Can an anatomy-aware, per-joint multi-instance learning framework using a foundation
+  model backbone jointly discriminate rheumatoid arthritis, psoriatic arthritis, and
+  osteoarthritis from hand X-rays with per-joint granularity and anatomically grounded
+  explanations, matching or exceeding the performance of single-disease specialist models?
+
+novelty_claims:
+  - claim: >
+      No existing system jointly performs three-way RA-vs-PsA-vs-OA discrimination at
+      per-joint granularity from hand X-rays.
+    status: grounded
+    evidence:
+      - Systematic review (Semin Arthritis Rheum, 2025): 88% of studies focus on RA,
+        22% on OA, 9% on PsA — none jointly on all three.
+      - EULAR 2025 ViT system (Hügle et al.): handles OA + RA + CPPD, not PsA; explicitly
+        lists PsA as future work.
+      - PsA ViT system (MLMI 2024): PsA-only scoring, not multi-disease.
+
+  - claim: >
+      Attention-based MIL with foundation model backbone can produce anatomically grounded
+      per-joint explanations that are more clinically meaningful than image-level Grad-CAM.
+    status: hypothesis
+    evidence: >
+      "TODO: unverified" — Anatomy-aware MIL for RA scoring (Bo et al., MICCAI AMAI 2025)
+      demonstrated the architecture for RA-only, but explanations were not validated against
+      anatomical priors. Expert-guided explanation loss (Uddin et al. 2025) improves
+      explanation specificity but has not been tested on arthritis. The combination of MIL +
+      anatomical grounding for three-way arthritis is novel.
+
+  - claim: >
+      Foundation models for MSK radiographs (OrthoFoundation, SKELEX) can be effectively
+      fine-tuned for arthritis-specific classification, yielding label-efficient gains.
+    status: hypothesis
+    evidence: >
+      "TODO: unverified" — OrthoFoundation (1.2M knee images) showed cross-anatomy transfer
+      to hip/shoulder/ankle but was not evaluated on RA/PsA/OA. SKELEX evaluated on fracture
+      detection and OA grading, not inflammatory arthritis. Neither has been tested on
+      three-way inflammatory arthritis discrimination. Performance is expected but unmeasured.
+
+known_related_work:
+  - work: "Multistage DL for Sharp score prediction in RA (Sci Rep 2025)"
+    covers: >
+      YOLOv7 + ViT pipeline achieving ICC 0.702 for RA scoring. Demonstrates multistage
+      detection-to-classification for per-joint analysis.
+    leaves_open: >
+      Single-disease (RA only). No per-joint disease-type classification. No explainability
+      beyond ViT attention.
+
+  - work: "ViT for OA + RA + CPPD on hand radiographs (EULAR 2025)"
+    covers: >
+      Unified ViT for three conditions on hand X-rays. AUROC 0.88 (OA), 0.93 (RA), 0.96
+      (CPPD). Segmentation + scoring in one tool.
+    leaves_open: >
+      Does not include PsA (listed as future work). Uses image-level not per-joint predictions.
+      No MIL formulation. Limited XAI (web-based tool, not explainability analysis).
+
+  - work: "Anatomy-aware MIL for RA scoring (Bo et al., MICCAI AMAI 2025)"
+    covers: >
+      Attention-based MIL with dual radiographs for RA Sharp scoring. PCC 0.943, approaching
+      expert-level.
+    leaves_open: >
+      RA-only. Does not extend to multi-disease discrimination. No anatomical validation of
+      attention weights (reported only aggregate metrics).
+
+  - work: "OrthoFoundation — multimodal foundation model for knee (arXiv Jan 2026)"
+    covers: >
+      Self-supervised DINOv3 on 1.2M knee X-ray+MRI images. SOTA on 14 downstream tasks.
+      50% label efficiency. Cross-anatomy transfer demonstrated.
+    leaves_open: >
+      Trained primarily on knee OA and injury. Not validated on inflammatory arthritis (RA,
+      PsA). Not tested on per-joint classification. Requires fine-tuning for hand X-ray domain
+      shift.
+
+  - work: "autoscoRA — automated SvdH scoring (Arthritis Rheumatol 2026)"
+    covers: >
+      Largest RA dataset (3,437 visits, 12,144 radiographs). ICC 0.9. Detects longitudinal
+      progression with 70% agreement.
+    leaves_open: >
+      RA-only. Requires very large dataset. No multi-disease capability. Longitudinal
+      capability may not transfer to other diseases.
+
+  - work: "Expert-guided explainable few-shot learning (Uddin et al., arXiv Sep 2025)"
+    covers: >
+      Explanation loss (Dice on Grad-CAM vs. expert ROIs) improving accuracy + specificity.
+      Demonstrated on BraTS MRI and VinDr-CXR.
+    leaves_open: >
+      Not applied to arthritis or bone/joint imaging. The explanation loss framework is
+      transplantable but requires expert ROI annotations.
+
+  - work: "XFMamba — Cross-Fusion Mamba for multi-view medical images (MICCAI 2025)"
+    covers: >
+      Mamba-based multi-view fusion for MSK X-rays (MURA). Sub-quadratic complexity.
+      Outperforms CNN/Transformer multi-view methods.
+    leaves_open: >
+      Evaluated on abnormality detection (binary) not multi-class arthritis discrimination.
+      Not tested on per-joint structure. No XAI analysis.
+
+baseline_requirements:
+  - "Image-level ViT fine-tuned on the same dataset (single-label RA/PsA/OA/healthy)"
+  - "Per-joint CNN baseline: YOLOv7 detection + per-joint ResNet-50 classifier, aggregated by majority vote"
+  - "Single-disease specialist models (separate RA-only, OA-only, PsA-only classifiers) to compare three-way joint performance"
+  - "Ablation: frozen backbone vs. full fine-tuning for the foundation model variant"
+
+evaluation_requirements:
+  - "Primary: Per-joint macro-F1, weighted-F1 for {RA, PsA, OA, normal} classification on held-out test set (patient-level split, not image-level split)"
+  - "Secondary: Patient-level accuracy and AUROC (aggregated from per-joint predictions)"
+  - "Interpretability: Explanation Dice score between model attention / Grad-CAM heatmaps and anatomical priors (joint groups typically affected by each disease)"
+  - "Interpretability: Deletion / insertion metrics (area under perturbation curve) for explanation faithfulness"
+  - "Calibration: Expected Calibration Error (ECE) per disease class"
+  - "Robustness: Performance stratified by disease severity, joint site, and image view"
+
+blocking_unknowns:
+  - "Dataset size: Minimum 200 patients required for statistical power in three-way classification (power analysis needed). If <100 patients, switch to two-class or one-vs-all formulation."
+  - "Annotation granularity: Are joint annotations bounding boxes or just labels? If bounding boxes exist, detection-based MIL is feasible. If only image-level labels exist, weakly-supervised MIL (tile sampling) is required."
+  - "Anatomy priors: Are disease-specific joint involvement patterns (e.g., RA affects MCP/PIP, OA affects DIP) available as structured knowledge, or must they be extracted from literature? This affects the explanation evaluation design."
+  - "View/site heterogeneity: How many views/sites per patient? If all patients have the same set, the architecture is simpler. If heterogeneous, a missingness-aware fusion mechanism is required (increases complexity)."
+  - "Foundation model access: Is OrthoFoundation/SKELEX publicly available (model weights), or must DINOv2 (which is publicly available but less domain-specific) serve as fallback?"
+  - "Longitudinal data: Are multiple timepoints available per patient? If yes, the scope could expand to include progression modeling — which would fundamentally change the architecture (add temporal dimension)."
+
+claim_status:
+  grounded:
+    - "RA scoring SOTA (ICC 0.90-0.94) demonstrates feasibility of automated X-ray assessment for arthritis"
+    - "No existing system jointly discriminates RA/PsA/OA at per-joint granularity"
+    - "MIL frameworks for RA-only scoring exist and are validated (Bo et al. 2025)"
+    - "Foundation models for MSK X-rays exist but are unvalidated for inflammatory arthritis"
+    - "Explanation loss approaches (Uddin et al. 2025) are applicable but not yet applied to arthritis"
+  hypotheses:
+    - "MIL for three-way arthritis discrimination outperforms image-level models and single-disease specialists"
+    - "Foundation model backbones provide meaningful label efficiency gains for this task"
+    - "Per-joint attention weights correlate with disease-specific anatomical priors"
+    - "Multi-view fusion (via cross-attention) improves over single-view models for arthritis classification"
+  TODO_unverified:
+    - "Minimum dataset size required for stable three-way training"
+    - "Whether joint-level annotations are bounding-box or label-level"
+    - "Whether disease-specific anatomical priors are available as structured data"
+    - "Whether OrthoFoundation/SKELEX weights are publicly accessible or require institutional agreement"
+    - "Inter-annotator agreement on per-joint disease labeling (RA vs PsA vs OA can be ambiguous even for radiologists)"
+    - "Whether 6 months is sufficient for both model development AND clinical validation/interpretability analysis"
+```
